@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  api:
+    build: ./infraestrutura/api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/logs
+
+  attacker:
+    build: ./atacante
+    depends_on:
+      - api
