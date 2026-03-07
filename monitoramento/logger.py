@@ -1,1 +1,0 @@
-print("Aplicação de Monitoramento de Segurança em Nuvem")
