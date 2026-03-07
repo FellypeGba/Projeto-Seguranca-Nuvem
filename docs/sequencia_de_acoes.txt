@@ -1,0 +1,11 @@
+Sequência de Ações do Projeto:
+
+1. docker-compose sobe os serviços
+
+2. API vulnerável fica disponível
+
+3. atacante executa scripts
+
+4. ataques são registrados em logs
+
+5. métricas analisam resultados para comparação

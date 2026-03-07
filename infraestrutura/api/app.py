@@ -1,0 +1,1 @@
+print("Aqui seria a implementação da API do aplicativo da nuvem")

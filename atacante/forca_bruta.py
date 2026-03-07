@@ -1,0 +1,1 @@
+print("Ataque a Força Bruta")
