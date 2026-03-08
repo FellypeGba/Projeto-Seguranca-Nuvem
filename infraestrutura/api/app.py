@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 import logging
+import os
 
 app = Flask(__name__)
 
-logging.basicConfig(filename='logs/api.log', level=logging.INFO)
+os.makedirs('/logs', exist_ok=True)
+logging.basicConfig(filename='/logs/api.log', level=logging.INFO)
 
 @app.route("/data")
 def data():

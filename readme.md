@@ -34,3 +34,13 @@ Onde ser armazenam os resultados de logs criando na execução do sistema como u
 ### ✅ monitoramento
 Parte que visa capturar os resultados dos ataques ao ambiente de nuvem e avaliar os danos causados de acordos com as métricas estabelicidas para escrever na seção de logs
 
+## 💻 Como Rodar
+Para rodar essa aplicação, acesse os dois documentos na pasta docs:
+
+### TESTE_DOCKER
+Mostrar como fazer um teste inicial usando o docker
+
+### TESTE_LOCAL
+Indica como fazer um teste local, sem uso do docker  
+
+**Observação:** Importante se atentar na url que o ataque irá buscar, pois se muda se for docker ou local
