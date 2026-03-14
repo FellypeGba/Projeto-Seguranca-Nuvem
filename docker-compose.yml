@@ -8,6 +8,11 @@ services:
       - ./logs:/logs
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build: ./infraestrutura/api
@@ -17,4 +22,5 @@ services:
   attacker:
     build: ./atacante
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy

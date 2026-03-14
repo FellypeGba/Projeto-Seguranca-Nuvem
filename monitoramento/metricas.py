@@ -3,8 +3,13 @@ import os
 # Função para ler arquivo de log de forma segura
 def read_log_file(filepath):
     if os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            return f.readlines()
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return f.readlines()
+        except UnicodeDecodeError:
+            # Fallback para latin-1 se utf-8 falhar
+            with open(filepath, 'r', encoding='latin-1') as f:
+                return f.readlines()
     else:
         print(f"Aviso: Arquivo {filepath} não encontrado.")
         return []

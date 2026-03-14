@@ -1,4 +1,4 @@
-Sequência de Ações do Projeto:
+Sequência de Ações Básicas do Projeto:
 
 1. docker-compose sobe os serviços
 

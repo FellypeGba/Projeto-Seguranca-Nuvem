@@ -22,10 +22,26 @@ pip install -r requirements.txt
 
 ## Executando o Teste
 
-### Terminal 1 - API (Servidor)
+### Terminal 1 - API (Servidor Interno)
 ```bash
 # Certifique-se de que o venv está ativado
+# Edite infraestrutura/api/app.py e mude port=5000 para port=5001
 python infraestrutura/api/app.py
+```
+
+Você verá:
+```
+ * Running on http://0.0.0.0:5001
+```
+
+**Deixe este terminal rodando.**
+
+### Terminal 2 - Gateway (Ponto de Entrada)
+Abra um novo PowerShell na pasta do projeto:
+```bash
+venv\Scripts\activate
+# Edite infraestrutura/gateway/gateway.py e mude API_BASE_URL = "http://localhost:5001"
+python infraestrutura/gateway/gateway.py
 ```
 
 Você verá:
@@ -35,10 +51,11 @@ Você verá:
 
 **Deixe este terminal rodando.**
 
-### Terminal 2 - Ataque
-Abra um novo PowerShell na pasta do projeto:
+### Terminal 3 - Ataque
+Abra um terceiro PowerShell na pasta do projeto:
 ```bash
 venv\Scripts\activate
+# Certifique-se de que ataque_simples.py usa url = "http://localhost:5000/admin"
 python atacante/ataque_simples.py
 ```
 
@@ -51,12 +68,12 @@ Você deve ver:
 403
 ```
 
-(5 requisições que falharam com status 403 - acesso proibido ao endpoint `/admin`).
+(5 requisições que falharam com status 403 - acesso proibido ao endpoint `/admin` via Gateway).
 
 ## Verificar Logs e Métricas
 
-### Terminal 3 - Métricas
-Abra um terceiro PowerShell:
+### Terminal 4 - Métricas
+Abra um quarto PowerShell:
 ```bash
 venv\Scripts\activate
 python monitoramento/metricas.py
@@ -64,16 +81,29 @@ python monitoramento/metricas.py
 
 Você verá algo como:
 ```
-Eventos registrados: 5
+=== MÉTRICAS DE MONITORAMENTO ===
+
+GATEWAY (Ponto de Entrada):
+  Total de requisições recebidas: 5
+  Requisições para /data: 0
+  Requisições para /admin: 5
+  Requisições bem-sucedidas (200): 0
+  Requisições bloqueadas (403): 5
+
+API (Processamento Interno):
+  Total de acessos processados: 5
+  Acessos ao /data: 0
+  Acessos ao /admin: 5
 ```
 
 ## Parar o Teste
 
-1. No Terminal 1 (API): pressione `Ctrl+C` para parar o servidor.
+1. Nos Terminais 1 e 2: pressione `Ctrl+C` para parar os servidores.
 2. Nos outros: você pode fechar os terminais normalmente.
 
 ## Observações
 
-- Os logs da API ficam em `logs/api.log`
-- Se a porta 5000 estiver ocupada, edite `infraestrutura/api/app.py` e mude a última linha para `app.run(host="0.0.0.0", port=5001)`, e ajuste a URL em `atacante/ataque_simples.py` para `http://localhost:5001/admin`.
-- O script simples faz apenas 5 requisições. Para variar, edite `atacante/ataque_simples.py`.
+- O Gateway age como proxy reverso, registrando requisições externas em `logs/gateway.log`.
+- A API registra processamento interno em `logs/api.log`.
+- Para teste local, ajuste as portas se houver conflitos (API na 5001, Gateway na 5000).
+- O script simples faz apenas 5 requisições.

@@ -12,10 +12,11 @@ docker-compose up --build
 ```
 
 Isso irá:
-- Construir as imagens da API e do Attacker.
-- Iniciar a API na porta 5000.
-- Executar o ataque automaticamente (5 requisições GET /admin).
-- Gravar logs em `logs/api.log`.
+- Construir as imagens do Gateway, API e Attacker.
+- Iniciar o Gateway na porta 5000 (ponto de entrada).
+- Iniciar a API internamente (porta 5000 na rede Docker).
+- Executar o ataque automaticamente via Gateway (5 requisições GET /admin).
+- Gravar logs em `logs/gateway.log` (gateway) e `logs/api.log` (API).
 
 Aguarde até ver as saídas dos containers (Attacker mostrará "403" 5 vezes).
 
@@ -28,8 +29,19 @@ python monitoramento/metricas.py
 
 Você verá algo como:
 ```
-Eventos registrados (linhas totais): 15
-Acessos ao /admin: 5
+=== MÉTRICAS DE MONITORAMENTO ===
+
+GATEWAY (Ponto de Entrada):
+  Total de requisições recebidas: 5
+  Requisições para /data: 0
+  Requisições para /admin: 5
+  Requisições bem-sucedidas (200): 0
+  Requisições bloqueadas (403): 5
+
+API (Processamento Interno):
+  Total de acessos processados: 5
+  Acessos ao /data: 0
+  Acessos ao /admin: 5
 ```
 
 ## Parar o Teste
@@ -42,6 +54,6 @@ Isso para e remove os containers.
 
 ## Observações
 
-- Os logs ficam em `logs/api.log` (persistidos localmente via volume).
+- O Gateway age como proxy reverso, registrando todas as requisições externas.
+- Os logs ficam em `logs/gateway.log` e `logs/api.log` (persistidos localmente via volume).
 - Para limpar imagens: `docker-compose down --rmi all`.
-- Se precisar alterar o ataque, edite `atacante/ataque_simples.py` e reconstrua.
