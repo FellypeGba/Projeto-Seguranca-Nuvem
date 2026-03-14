@@ -2,14 +2,21 @@ version: "3"
 
 services:
 
-  api:
-    build: ./infraestrutura/api
+  gateway:
+    build: ./infraestrutura/gateway
     ports:
       - "5000:5000"
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      - api
+
+  api:
+    build: ./infraestrutura/api
     volumes:
       - ./logs:/logs
 
   attacker:
     build: ./atacante
     depends_on:
-      - api
+      - gateway
