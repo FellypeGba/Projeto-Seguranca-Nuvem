@@ -14,26 +14,21 @@ logging.basicConfig(filename='/logs/gateway.log', level=logging.INFO, format='%(
 # URL da API interna
 API_BASE_URL = "http://api:5000"
 
-@app.route("/data")
-def data():
+# Rota Genérica para proxy de requisições para a API
+@app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
+def proxy(path):
     try:
-        # Encaminhar requisição para a API
-        response = requests.get(f"{API_BASE_URL}/data")
-        logging.info(f"Requisição para /data - Status: {response.status_code}")
+        url = f"{API_BASE_URL}/{path}"
+        response = requests.request(
+            method=request.method,
+            url=url,
+            json=request.get_json(silent=True),
+            params=request.args
+        )
+        logging.info(f"Requisição para /{path} - Método: {request.method} - Status: {response.status_code}")
         return jsonify(response.json()), response.status_code
     except Exception as e:
-        logging.error(f"Erro ao acessar /data: {str(e)}")
-        return jsonify({"status": "error", "message": "Internal server error"}), 500
-
-@app.route("/admin")
-def admin():
-    try:
-        # Encaminhar requisição para a API
-        response = requests.get(f"{API_BASE_URL}/admin")
-        logging.info(f"Requisição para /admin - Status: {response.status_code}")
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        logging.error(f"Erro ao acessar /admin: {str(e)}")
+        logging.error(f"Erro ao acessar /{path}: {str(e)}")
         return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 if __name__ == "__main__":
