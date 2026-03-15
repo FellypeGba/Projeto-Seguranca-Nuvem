@@ -71,11 +71,12 @@ Lê logs do Gateway e API, gera métricas:
 .
 ├── docker-compose.yml
 ├── atacante/
+├── docs/
 ├── infraestrutura/
-│   ├── gateway/
 │   ├── api/
-│   └── database/ (futuro)
-├── monitoramento/
+│   ├── database/
+│   ├── gateway/
+│   └── interno/
 ├── logs/
-└── docs/
+└── monitoramento/
 ```

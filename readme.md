@@ -13,8 +13,9 @@ projeto-seguranca-nuvem/
 ├── docs/
 ├── infraestrutura/
 │   ├── api/
-│   ├── interno/
-│   └── database/
+│   ├── database/
+│   ├── gateway/
+│   └── interno/
 ├── logs/
 └── monitoramento/
 ```
@@ -26,7 +27,7 @@ Aplicação responsável por se passar por um atacante, utilizando diversas estr
 Aqui fica descrições estruturais e a arquitetura do projeto
 
 ### ✅ infraestutura
-Onde reside a aplicação de nuvem, com a api de acesso, a pasta interno onde supostamente deveria ser protegido e o banco de dados (database)
+Onde reside a aplicação de nuvem, com a api de acesso, o gateway, a pasta interno onde supostamente deveria ter dados a serem protegidos e o banco de dados (database)
 
 ### ✅ logs
 Onde ser armazenam os resultados de logs criando na execução do sistema como um todo
