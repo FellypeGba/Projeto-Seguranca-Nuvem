@@ -27,9 +27,11 @@ print(f"  Total de requisições recebidas: {len(gateway_requests)}")
 
 gateway_data_requests = [l for l in gateway_requests if "/data" in l]
 gateway_admin_requests = [l for l in gateway_requests if "/admin" in l]
+gateway_users_requests = [l for l in gateway_requests if "/users" in l]
 
 print(f"  Requisições para /data: {len(gateway_data_requests)}")
 print(f"  Requisições para /admin: {len(gateway_admin_requests)}")
+print(f"  Requisições para /users: {len(gateway_users_requests)}")
 
 # Status das requisições (bem-sucedidas vs bloqueadas)
 successful_requests = [l for l in gateway_requests if "Status: 200" in l]
@@ -44,9 +46,10 @@ print()
 print("API (Processamento Interno):")
 api_accesses = [l for l in api_lines if "endpoint accessed" in l]
 print(f"  Total de acessos processados: {len(api_accesses)}")
-
 api_data_accesses = [l for l in api_accesses if "/data" in l]
 api_admin_accesses = [l for l in api_accesses if "admin" in l]
+api_users_accesses = [l for l in api_accesses if "/users" in l]
 
 print(f"  Acessos ao /data: {len(api_data_accesses)}")
 print(f"  Acessos ao /admin: {len(api_admin_accesses)}")
+print(f"  Acessos ao /users: {len(api_users_accesses)}")
