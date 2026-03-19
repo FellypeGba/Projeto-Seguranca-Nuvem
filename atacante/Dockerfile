@@ -2,8 +2,8 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN pip install requests
+RUN pip install --no-cache-dir requests aiohttp
 
 COPY . /app/
 
-CMD ["python", "ataque_simples.py"]
+ENTRYPOINT ["python", "atacar.py"]

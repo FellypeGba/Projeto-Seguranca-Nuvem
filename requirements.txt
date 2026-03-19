@@ -1,4 +1,7 @@
-flask
+fastapi
+uvicorn
 requests
+aiohttp
 psycopg2-binary
 sqlalchemy
+bcrypt
