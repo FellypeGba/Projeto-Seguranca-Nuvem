@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Sec Simulator | Painel do Atacante</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --danger: #f85149;
+            --success: #3fb950;
+            --warning: #d29922;
+            --border: #30363d;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-weight: 600; color: var(--accent); margin-bottom: 5px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 30px; }
+
+        /* --- NOVOS ESTILOS PARA MÉTRICAS --- */
+        .metrics-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .stat-value { font-size: 2rem; font-weight: bold; display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+        #metricsChart { max-height: 220px !important; }
+        /* ---------------------------------- */
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .icon { font-size: 2rem; }
+        
+        .card-title { font-size: 1.25rem; font-weight: 600; margin: 0; color: var(--text-main); }
+        .endpoint { font-family: 'Fira Code', monospace; background: #000; padding: 2px 6px; border-radius: 4px; color: var(--warning); font-size: 0.9rem;}
+
+        .card-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .attack-config {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        label { font-size: 0.85rem; color: var(--text-muted); }
+
+        input[type="number"] {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 6px;
+            width: 60px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+
+        .btn-recon { background-color: var(--accent); color: white; }
+        .btn-recon:hover { background-color: #4096ff; }
+
+        .btn-exploit { background-color: var(--danger); color: white; }
+        .btn-exploit:hover { background-color: #da3633; }
+
+        #console-card {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        #console-log {
+            font-family: 'Fira Code', monospace;
+            background-color: #000;
+            color: var(--success);
+            padding: 15px;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            border: 1px solid var(--success);
+        }
+
+        .log-entry { margin-bottom: 4px; }
+        .log-timestamp { color: var(--text-muted); }
+
+        /* Cores para status de resposta no console */
+        .status-200 { color: #3fb950 !important; font-weight: bold; } /* Verde para Sucesso */
+        .status-403 { color: #f85149 !important; font-weight: bold; } /* Vermelho para Bloqueado */
+        .status-401 { color: #d29922 !important; font-weight: bold; } /* Amarelo para Falha de Login */
+        .status-other { color: #58a6ff !important; }                /* Azul para outros */
+    </style>
+</head>
+<body>
+
+    <h1>Simulador de Segurança na Nuvem</h1>
+    <div class="subtitle">Painel de Controle de Vetores de Ataque</div>
+
+    <div class="metrics-container">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📊</span>
+                <h3 class="card-title">Distribuição</h3>
+            </div>
+            <canvas id="metricsChart"></canvas>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📈</span>
+                <h3 class="card-title">Métricas da Sessão</h3>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span id="count-200" class="stat-value status-200">0</span>
+                    <span class="stat-label">Sucesso (200)</span>
+                </div>
+                <div class="stat-item">
+                    <span id="count-403" class="stat-value status-403">0</span>
+                    <span class="stat-label">Bloqueio (403)</span>
+                </div>
+                <div class="stat-item">
+                    <span id="count-401" class="stat-value status-401">0</span>
+                    <span class="stat-label">Invasão (401)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard">
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🔍</span>
+                <div>
+                    <h3 class="card-title">Exploração de Dados Públicos</h3>
+                    <span class="endpoint">GET /users</span>
+                </div>
+            </div>
+            <p class="card-description">
+                Simula um atacante tentando coletar informações através de uma API mal projetada que expõe dados de usuários. Útil para fase de reconhecimento e montagem de dicionários de senhas.
+            </p>
+            <div class="attack-config">
+                <label for="qtd_users">Repetições:</label>
+                <input type="number" id="qtd_users" value="5" min="1" max="100">
+            </div>
+            <button class="btn-recon" onclick="dispararAtaque('users', 'qtd_users')">Iniciar Reconhecimento</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🔓</span>
+                <div>
+                    <h3 class="card-title">Força Bruta de Senhas</h3>
+                    <span class="endpoint">POST /login</span>
+                </div>
+            </div>
+            <p class="card-description">
+                Tenta adivinhar a senha do usuário <code style="color:var(--warning)">admin</code> enviando múltiplas requisições com senhas comuns. Demonstra a necessidade de políticas de bloqueio de conta.
+            </p>
+            <div class="attack-config">
+                <label for="qtd_brute">Tentativas:</label>
+                <input type="number" id="qtd_brute" value="10" min="1" max="50">
+            </div>
+            <button class="btn-exploit" onclick="dispararAtaque('forca_bruta', 'qtd_brute')">Executar Força Bruta</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🛑</span>
+                <div>
+                    <h3 class="card-title">Quebra de Controle de Acesso</h3>
+                    <span class="endpoint">GET /admin</span>
+                </div>
+            </div>
+            <p class="card-description">
+                Tenta acessar diretamente uma URL administrativa sem autenticação. Testa se o Gateway ou a API estão validando permissões corretamente. Espera-se um erro 403.
+            </p>
+            <div class="attack-config">
+                <label for="qtd_admin">Repetições:</label>
+                <input type="number" id="qtd_admin" value="5" min="1" max="100">
+            </div>
+            <button class="btn-exploit" onclick="dispararAtaque('admin', 'qtd_admin')">Tentar Acesso Proibido</button>
+        </div>
+
+        <div id="console-card" class="card">
+            <div class="card-header">
+                <span class="icon">💻</span>
+                <h3 class="card-title">Console de Execução do Atacante</h3>
+            </div>
+            <div id="console-log">
+                <div class="log-entry"><span class="log-timestamp">[SYSTEM]</span> Aguardando comando...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- LÓGICA DE GRÁFICOS ---
+        let stats = { 200: 0, 403: 0, 401: 0 };
+        let metricsChart;
+
+        function initChart() {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            metricsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['OK', 'Forbidden', 'Unauthorized'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3fb950', '#f85149', '#d29922'],
+                        borderColor: '#161b22', borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 10 } } } },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        function updateDashboardStats(status) {
+            if (stats[status] !== undefined) {
+                stats[status]++;
+                document.getElementById(`count-${status}`).innerText = stats[status];
+                metricsChart.data.datasets[0].data = [stats[200], stats[403], stats[401]];
+                metricsChart.update();
+            }
+        }
+        // -------------------------
+
+        function adicionarLog(mensagem, tipo = 'SYSTEM') {
+            const consoleLog = document.getElementById('console-log');
+            const agora = new Date().toLocaleTimeString();
+            const novaEntrada = document.createElement('div');
+            novaEntrada.className = 'log-entry';
+            
+            let classeStatus = '';
+            let corTipo = 'var(--text-muted)';
+
+            // Identifica o status code na mensagem para aplicar a cor e atualizar gráfico
+            const statusMatch = mensagem.match(/Status: (\d{3})/);
+            if (statusMatch) {
+                const status = statusMatch[1];
+                classeStatus = `status-${status}`;
+                updateDashboardStats(status); // Atualiza o gráfico e contadores
+            } else if (mensagem.includes('Status: 200')) {
+                classeStatus = 'status-200';
+            } else if (mensagem.includes('Status: 403')) {
+                classeStatus = 'status-403';
+            } else if (mensagem.includes('Status: 401')) {
+                classeStatus = 'status-401';
+            } else {
+                classeStatus = 'status-other';
+            }
+
+            if (tipo === 'ATTACK') corTipo = 'var(--danger)';
+            if (tipo === 'INFO') corTipo = 'var(--accent)';
+
+            const mensagemFormatada = mensagem.replace(/(Status: \d{3})/, `<span class="${classeStatus}">$1</span>`);
+
+            novaEntrada.innerHTML = `<span class="log-timestamp">[${agora}]</span> <span style="color: ${corTipo}">[${tipo}]</span> ${mensagemFormatada}`;
+            consoleLog.appendChild(novaEntrada);
+            consoleLog.scrollTop = consoleLog.scrollHeight; 
+        }
+
+        function dispararAtaque(tipo, idInput) {
+            const qtd = document.getElementById(idInput).value;
+            const endpointExibido = document.getElementById(idInput).closest('.card').querySelector('.endpoint').innerText;
+            
+            adicionarLog(`Solicitando ataque tipo '${tipo}' (${qtd} requisições no endpoint ${endpointExibido})`, 'INFO');
+
+            fetch('/disparar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tipo: tipo, quantidade: qtd})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'iniciado') {
+                    adicionarLog(`Ataque '${tipo}' iniciado em background. Verifique os logs do Gateway para os resultados.`, 'ATTACK');
+                } else {
+                    adicionarLog(`Erro ao iniciar ataque: ${data.mensagem}`, 'SYSTEM');
+                }
+            })
+            .catch(error => {
+                adicionarLog(`Erro de rede: ${error}`, 'SYSTEM');
+            });
+        }
+
+        let logsExibidos = new Set();
+        function monitorarLogs() {
+            fetch('/obter_logs')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'sucesso' && data.logs.length > 0) {
+                        data.logs.forEach(linha => {
+                            const linhaLimpa = linha.trim();
+                            if (linhaLimpa.includes('Requisição para') && !logsExibidos.has(linhaLimpa)) {
+                                adicionarLog(`[GATEWAY] ${linhaLimpa}`, 'INFO');
+                                logsExibidos.add(linhaLimpa);
+                                if (logsExibidos.size > 100) logsExibidos.clear();
+                            }
+                        });
+                    }
+                });
+        }
+
+        // Inicializa gráfico e monitoramento
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            setInterval(monitorarLogs, 2000);
+        });
+    </script>
+</body>
+</html>

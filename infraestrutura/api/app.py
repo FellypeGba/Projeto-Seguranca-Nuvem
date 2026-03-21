@@ -54,5 +54,21 @@ def admin():
     logging.info("admin endpoint accessed")
     return jsonify({"status": "forbidden"}), 403
 
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get("user")
+    password = data.get("pass")
+    
+    logging.info(f"Tentativa de login para o usuário: {username}")
+    
+    # Simulação de verificação de senha
+    if username == "admin" and password == "admin123":
+        logging.info(f"Login bem-sucedido para: {username}")
+        return jsonify({"status": "success", "message": "Bem-vindo, admin!"}), 200
+    else:
+        logging.warning(f"Falha de login para: {username} com a senha: {password}")
+        return jsonify({"status": "error", "message": "Credenciais inválidas"}), 401
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000) #se usar localmente, mude para 5001 para evitar conflito com o gateway que roda na 5000

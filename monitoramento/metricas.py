@@ -49,7 +49,11 @@ print(f"  Total de acessos processados: {len(api_accesses)}")
 api_data_accesses = [l for l in api_accesses if "/data" in l]
 api_admin_accesses = [l for l in api_accesses if "admin" in l]
 api_users_accesses = [l for l in api_accesses if "/users" in l]
+api_login_attempts = [l for l in api_lines if "Tentativa de login" in l]
+api_login_failures = [l for l in api_lines if "Falha de login" in l]
 
 print(f"  Acessos ao /data: {len(api_data_accesses)}")
 print(f"  Acessos ao /admin: {len(api_admin_accesses)}")
 print(f"  Acessos ao /users: {len(api_users_accesses)}")
+print(f"  Tentativas de login totais: {len(api_login_attempts)}")
+print(f"  Falhas de login (possível Brute Force): {len(api_login_failures)}")
