@@ -377,7 +377,7 @@ def route_reports():
 
 @app.route("/api/logs/<filename>")
 def route_logs(filename):
-    allowed = {"gateway.log", "api_vulneravel.log", "api_protegida.log"}
+    allowed = {"api_vulneravel.log", "api_protegida.log"}
     if filename not in allowed:
         return jsonify({"error": "Nao permitido"}), 403
     return jsonify({"lines": read_log(filename)})

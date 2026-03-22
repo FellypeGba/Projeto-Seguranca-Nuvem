@@ -95,7 +95,7 @@ nav{
 
 /* FORM */
 .label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
-.input,.select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;-webkit-appearance:none;transition:.15s}
+.input,.select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;-webkit-appearance:none;appearance:none;transition:.15s}
 .input:focus,.select:focus{border-color:#2a4a6d}
 .form-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .form-group{flex:1;min-width:110px}
@@ -425,10 +425,9 @@ nav{
 <!-- ── LOGS ────────────────────────────────────────────────────────────────── -->
 <div class="page" id="page-logs">
   <div class="page-title">Logs do Sistema</div>
-  <div class="page-sub">// Arquivos gerados pelo gateway e pelas APIs</div>
+  <div class="page-sub">// Arquivos gerados pelo pelas APIs</div>
 
   <div class="log-tabs">
-    <button class="ltab on" onclick="loadLog('gateway.log',this)">gateway.log</button>
     <button class="ltab" onclick="loadLog('api_vulneravel.log',this)">api_vulneravel.log</button>
     <button class="ltab" onclick="loadLog('api_protegida.log',this)">api_protegida.log</button>
   </div>
@@ -543,7 +542,7 @@ function go(name) {
   document.querySelectorAll('.tab').forEach(t => {
     if (t.textContent.toLowerCase().includes(labels[name])) t.classList.add('on');
   });
-  if (name === 'logs' && !S.logLoaded) loadLog('gateway.log');
+  if (name === 'logs' && !S.logLoaded) loadLog('api_vulneravel.log.log');
   if (name === 'reports') loadReports();
   if (name === 'overview') refreshStatus();
 }
@@ -551,7 +550,7 @@ function go(name) {
 // ── Estado ────────────────────────────────────────────────────────────────────
 const S = {
   logLoaded: false,
-  logFile: 'gateway.log',
+  logFile: 'api_vulneravel.log.log',
   logLines: [],
   bf: null,   // attack_id
   dos: null,
