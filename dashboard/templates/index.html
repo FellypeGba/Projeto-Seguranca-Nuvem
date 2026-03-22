@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SecCloud — Simulador de Segurança</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d12;
+  --surface:#111620;
+  --surface2:#161d29;
+  --border:#1e2a3a;
+  --text:#c5d5e8;
+  --muted:#4d6275;
+  --accent:#3b9eff;
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f59e0b;
+  --purple:#a78bfa;
+  --r:8px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,13,18,.97);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:54px;
+  backdrop-filter:blur(8px);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:#fff}
+.nav-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.nav-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.nav-tabs{display:flex;gap:2px}
+.tab{padding:5px 14px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;font-family:'Inter',sans-serif}
+.tab:hover{color:var(--text);background:var(--surface)}
+.tab.on{color:var(--accent);background:rgba(59,158,255,.1)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:.15s}
+.pill:hover{border-color:#2a3a4d}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s infinite}
+.dot.off{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-sm{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:.15s;font-family:'Inter',sans-serif}
+.btn-sm:hover{border-color:#2a3a4d;color:#fff}
+
+/* PAGES */
+.page{display:none;max-width:1100px;margin:0 auto;padding:28px 24px}
+.page.on{display:block}
+.page-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
+.page-sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:24px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+
+/* STATUS CARD */
+.api-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.api-card.on{border-color:rgba(34,197,94,.2)}
+.api-card.off{border-color:rgba(239,68,68,.2)}
+.api-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px}
+.api-url{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:12px}
+.api-rows{display:flex;flex-direction:column;gap:6px}
+.api-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.api-row-label{color:var(--muted)}
+.api-row-val{font-family:'JetBrains Mono',monospace;font-weight:600}
+
+/* STAT */
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.stat-val{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:5px}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.badge-green{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge-red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.badge-orange{background:rgba(245,158,11,.12);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
+.badge-blue{background:rgba(59,158,255,.12);color:var(--accent);border:1px solid rgba(59,158,255,.2)}
+.badge-muted{background:rgba(77,98,117,.12);color:var(--muted);border:1px solid var(--border)}
+
+/* FORM */
+.label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+.input,.select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;-webkit-appearance:none;transition:.15s}
+.input:focus,.select:focus{border-color:#2a4a6d}
+.form-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.form-group{flex:1;min-width:110px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:6px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;letter-spacing:.01em;white-space:nowrap;width:100%;justify-content:center}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover:not(:disabled){background:#dc2626}
+.btn-orange{background:var(--orange);color:#000}
+.btn-orange:hover:not(:disabled){background:#d97706}
+.btn-blue{background:var(--accent);color:#fff}
+.btn-blue:hover:not(:disabled){background:#2563eb}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){border-color:#2a3a4d;color:#fff}
+.btn-green{background:var(--green);color:#000}
+
+/* PROGRESS */
+.prog-wrap{margin:10px 0}
+.prog-info{display:flex;justify-content:space-between;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:5px}
+.prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s ease;width:0%}
+.prog-red{background:var(--red)}
+.prog-orange{background:var(--orange)}
+
+/* CONSOLE */
+.console{background:#050709;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:14px}
+.console-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border)}
+.console-dots{display:flex;gap:5px}
+.cdot{width:9px;height:9px;border-radius:50%}
+.cdot:nth-child(1){background:#ff5f57}
+.cdot:nth-child(2){background:#febc2e}
+.cdot:nth-child(3){background:#28c840}
+.console-label{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.console-body{padding:10px 12px;height:220px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.75}
+.cl{display:flex;gap:8px;align-items:baseline}
+.cl-ts{color:#1e3040;flex-shrink:0;font-size:10.5px}
+.cl-tag{flex-shrink:0;font-weight:700;font-size:10px;padding:0 3px;border-radius:2px}
+.cl-tag.info{color:var(--accent)}
+.cl-tag.fail{color:var(--red)}
+.cl-tag.success{color:var(--green)}
+.cl-tag.blocked{color:var(--orange)}
+.cl-tag.error{color:var(--red)}
+.cl-tag.dos{color:var(--purple)}
+.cl-msg{color:var(--text);word-break:break-all}
+.hl-g{color:var(--green)}
+.hl-r{color:var(--red)}
+.hl-o{color:var(--orange)}
+.hl-p{color:var(--purple)}
+.hl-b{color:var(--accent)}
+
+/* RESULT BOX */
+.result{border-radius:var(--r);padding:14px;margin-top:12px;border:1px solid}
+.result.ok{background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.2)}
+.result.bad{background:rgba(239,68,68,.04);border-color:rgba(239,68,68,.2)}
+.result.warn{background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.2)}
+.result-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:10px}
+.rmetrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.rm{background:var(--surface);border-radius:6px;padding:10px}
+.rm-val{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#fff}
+.rm-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:2px}
+
+/* CODE BARS */
+.cbars{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.cbar-row{display:flex;align-items:center;gap:8px}
+.cbar-lbl{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;width:36px;flex-shrink:0}
+.cbar-track{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.cbar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.cbar-n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:44px;text-align:right;flex-shrink:0}
+
+/* LOGS */
+.log-tabs{display:flex;gap:4px;margin-bottom:12px}
+.ltab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:.15s}
+.ltab:hover{color:var(--text)}
+.ltab.on{color:var(--accent);border-color:rgba(59,158,255,.25);background:rgba(59,158,255,.05)}
+.log-viewer{background:#050709;border:1px solid var(--border);border-radius:var(--r);height:460px;overflow-y:auto;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7}
+.lv-line{display:block;padding:1px 0;color:#3d5a70}
+.lv-line:hover{color:var(--text)}
+.lv-200{color:#4ade80}
+.lv-401{color:var(--orange)}
+.lv-403{color:#f87171}
+.lv-429{color:var(--purple)}
+.lv-500{color:#f87171}
+.log-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+/* REPORTS */
+.report-list{display:flex;flex-direction:column;gap:8px}
+.report-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s}
+.report-item:hover{border-color:#2a3a4d}
+.report-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.report-icon.bf{background:rgba(239,68,68,.1)}
+.report-icon.dos{background:rgba(245,158,11,.1)}
+.report-info{flex:1}
+.report-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px}
+.report-meta{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.report-stats{display:flex;gap:16px;flex-shrink:0}
+.rst{text-align:right}
+.rst-val{font-size:17px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#fff}
+.rst-lbl{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.06em}
+.report-detail{background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);padding:14px 16px}
+
+/* MANUAL */
+.method{display:inline-block;padding:3px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700}
+.method.GET{background:rgba(34,197,94,.1);color:var(--green)}
+.method.POST{background:rgba(59,158,255,.1);color:var(--accent)}
+.resp-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:10px;min-height:60px;white-space:pre-wrap;word-break:break-all;display:none}
+.resp-status{display:flex;align-items:center;gap:8px;font-size:12px;font-family:'JetBrains Mono',monospace;margin-top:8px;min-height:20px}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty-icon{font-size:36px;opacity:.3;margin-bottom:10px}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:20px 0}
+
+/* ARCH */
+.arch{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;padding:8px 0}
+.arch-node{text-align:center;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:100px}
+.arch-node.on{border-color:rgba(34,197,94,.25)}
+.arch-node.off{border-color:rgba(239,68,68,.2)}
+.arch-dot{font-size:14px;margin-bottom:3px}
+.arch-name{font-size:12px;font-weight:600;color:#fff}
+.arch-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.arch-arr{color:var(--muted);padding:0 8px;font-size:16px;align-self:center}
+
+/* FADE */
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .2s ease forwards}
+
+/* WARN BOX */
+.wbox{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:#b58a3a;margin-bottom:18px;display:flex;gap:8px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-icon">🛡️</div>
+    <div>
+      <div>SecCloud</div>
+      <div class="nav-sub">Attack Simulator</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab on" onclick="go('overview')">Visão Geral</button>
+    <button class="tab" onclick="go('attacks')">Ataques</button>
+    <button class="tab" onclick="go('logs')">Logs</button>
+    <button class="tab" onclick="go('reports')">Relatórios</button>
+    <button class="tab" onclick="go('manual')">Teste Manual</button>
+  </div>
+  <div class="nav-right">
+    <div class="pill" onclick="refreshStatus()" title="Clique para atualizar">
+      <div class="dot" id="dot-vuln"></div>
+      <span id="lbl-vuln">:8081</span>
+    </div>
+    <div class="pill" onclick="refreshStatus()" title="Clique para atualizar">
+      <div class="dot" id="dot-secure"></div>
+      <span id="lbl-secure">:8082</span>
+    </div>
+    <button class="btn-sm" onclick="refreshStatus()">↻ Atualizar</button>
+  </div>
+</nav>
+
+<!-- ── VISÃO GERAL ─────────────────────────────────────────────────────────── -->
+<div class="page on" id="page-overview">
+  <div class="page-title">Visão Geral</div>
+  <div class="page-sub">// Status das APIs e ambiente de simulação</div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <div class="api-card" id="acard-vuln">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div class="api-name">API Vulnerável</div>
+          <div class="api-url">localhost:8081</div>
+        </div>
+        <span class="badge badge-muted" id="abadge-vuln">—</span>
+      </div>
+      <div class="api-rows">
+        <div class="api-row"><span class="api-row-label">Modo</span><span class="api-row-val" id="v-modo">—</span></div>
+        <div class="api-row"><span class="api-row-label">Rate Limit</span><span class="api-row-val" style="color:var(--red)">Desativado</span></div>
+        <div class="api-row"><span class="api-row-label">Bloqueio por IP</span><span class="api-row-val" style="color:var(--red)">Não</span></div>
+      </div>
+    </div>
+
+    <div class="api-card" id="acard-secure">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div class="api-name">API Protegida</div>
+          <div class="api-url">localhost:8082</div>
+        </div>
+        <span class="badge badge-muted" id="abadge-secure">—</span>
+      </div>
+      <div class="api-rows">
+        <div class="api-row"><span class="api-row-label">Modo</span><span class="api-row-val" id="s-modo">—</span></div>
+        <div class="api-row"><span class="api-row-label">Rate Limit</span><span class="api-row-val" style="color:var(--green)">2 req/s por IP</span></div>
+        <div class="api-row"><span class="api-row-label">Bloqueio por IP</span><span class="api-row-val" style="color:var(--green)">3 falhas → 60s</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g4" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-val" id="st-wordlist" style="color:var(--accent)">—</div><div class="stat-lbl">Senhas na Wordlist</div></div>
+    <div class="stat"><div class="stat-val" id="st-bf" style="color:var(--red)">—</div><div class="stat-lbl">Ataques BF salvos</div></div>
+    <div class="stat"><div class="stat-val" id="st-dos" style="color:var(--orange)">—</div><div class="stat-lbl">Ataques DoS salvos</div></div>
+    <div class="stat"><div class="stat-val" id="st-gw" style="color:var(--muted)">—</div><div class="stat-lbl">APIs online</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🏗️ Arquitetura do Ambiente</div>
+    <div class="arch" id="arch"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ Ações Rápidas</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-red" style="width:auto" onclick="quickAtk('bruteforce','vuln')">🔓 BF — Vulnerável</button>
+      <button class="btn btn-red" style="width:auto" onclick="quickAtk('bruteforce','secure')">🔓 BF — Protegida</button>
+      <button class="btn btn-orange" style="width:auto" onclick="quickAtk('dos','vuln')">💣 DoS — Vulnerável</button>
+      <button class="btn btn-orange" style="width:auto" onclick="quickAtk('dos','secure')">💣 DoS — Protegida</button>
+      <button class="btn btn-ghost" style="width:auto" onclick="go('logs')">📋 Logs</button>
+      <button class="btn btn-ghost" style="width:auto" onclick="go('reports')">📊 Relatórios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ATAQUES ─────────────────────────────────────────────────────────────── -->
+<div class="page" id="page-attacks">
+  <div class="page-title">Simulação de Ataques</div>
+  <div class="page-sub">// Execute ataques controlados para fins educacionais</div>
+
+  <div class="wbox">⚠️ <span>Ferramenta exclusivamente educacional — ataques simulados contra APIs locais do laboratório.</span></div>
+
+  <div class="g2">
+    <!-- BRUTE FORCE -->
+    <div class="card" id="card-bf">
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">🔓 Força Bruta de Senhas</div>
+      <div style="display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(59,158,255,.08);color:var(--accent);border:1px solid rgba(59,158,255,.15);margin-bottom:10px">POST /login</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Testa senhas da wordlist contra o endpoint <code>/login</code> como usuário <strong>admin</strong>.
+        A API vulnerável não bloqueia — a protegida bloqueia após 3 falhas.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Alvo</label>
+          <select class="select" id="bf-alvo">
+            <option value="vuln">API Vulnerável (:8081)</option>
+            <option value="secure">API Protegida (:8082)</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:130px">
+          <label class="label">Max. Tentativas</label>
+          <input class="input" type="number" id="bf-max" value="20" min="1" max="447">
+        </div>
+      </div>
+      <div class="prog-wrap" id="bf-prog" style="display:none">
+        <div class="prog-info"><span id="bf-prog-lbl">0 / 0</span><span id="bf-prog-pct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill prog-red" id="bf-prog-fill"></div></div>
+      </div>
+      <button class="btn btn-red" id="btn-bf" onclick="startAtk('bruteforce')">🚀 Iniciar Brute Force</button>
+      <div class="console" style="margin-top:12px">
+        <div class="console-bar">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="console-dots"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div></div>
+            <span class="console-label">bf_console</span>
+          </div>
+          <button class="btn-sm" onclick="clrConsole('bf-log')">Limpar</button>
+        </div>
+        <div class="console-body" id="bf-log">
+          <div class="cl"><span class="cl-tag info">INFO</span><span class="cl-msg">Aguardando início do ataque...</span></div>
+        </div>
+      </div>
+      <div id="bf-result"></div>
+    </div>
+
+    <!-- DoS -->
+    <div class="card" id="card-dos">
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">💣 Negação de Serviço (DoS)</div>
+      <div style="display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,.08);color:var(--orange);border:1px solid rgba(245,158,11,.15);margin-bottom:10px">GET /relatorio</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Dispara requisições concorrentes ao <code>/relatorio</code>, que executa query pesada no banco.
+        A API protegida bloqueia com rate limiting (429) — a vulnerável processa tudo.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Alvo</label>
+          <select class="select" id="dos-alvo">
+            <option value="vuln">API Vulnerável (:8081)</option>
+            <option value="secure">API Protegida (:8082)</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:110px">
+          <label class="label">Workers</label>
+          <input class="input" type="number" id="dos-workers" value="20" min="1" max="100">
+        </div>
+        <div class="form-group" style="max-width:110px">
+          <label class="label">Duração (s)</label>
+          <input class="input" type="number" id="dos-dur" value="15" min="5" max="60">
+        </div>
+      </div>
+      <div class="prog-wrap" id="dos-prog" style="display:none">
+        <div class="prog-info"><span id="dos-prog-lbl">0s / 0s</span><span id="dos-reqs">0 reqs</span></div>
+        <div class="prog-track"><div class="prog-fill prog-orange" id="dos-prog-fill"></div></div>
+      </div>
+      <button class="btn btn-orange" id="btn-dos" onclick="startAtk('dos')">💣 Iniciar DoS</button>
+      <div class="console" style="margin-top:12px">
+        <div class="console-bar">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="console-dots"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div></div>
+            <span class="console-label">dos_console</span>
+          </div>
+          <button class="btn-sm" onclick="clrConsole('dos-log')">Limpar</button>
+        </div>
+        <div class="console-body" id="dos-log">
+          <div class="cl"><span class="cl-tag info">INFO</span><span class="cl-msg">Aguardando início do ataque...</span></div>
+        </div>
+      </div>
+      <div id="dos-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGS ────────────────────────────────────────────────────────────────── -->
+<div class="page" id="page-logs">
+  <div class="page-title">Logs do Sistema</div>
+  <div class="page-sub">// Arquivos gerados pelo gateway e pelas APIs</div>
+
+  <div class="log-tabs">
+    <button class="ltab on" onclick="loadLog('gateway.log',this)">gateway.log</button>
+    <button class="ltab" onclick="loadLog('api_vulneravel.log',this)">api_vulneravel.log</button>
+    <button class="ltab" onclick="loadLog('api_protegida.log',this)">api_protegida.log</button>
+  </div>
+
+  <div class="log-controls">
+    <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)" id="log-info">—</span>
+    <div style="display:flex;gap:6px">
+      <input class="input" type="text" id="log-filter" placeholder="Filtrar..." style="width:160px" oninput="filterLog()">
+      <button class="btn-sm" onclick="refreshLog()">↻</button>
+      <button class="btn-sm" onclick="scrollBottom()">↓ Final</button>
+    </div>
+  </div>
+
+  <div class="log-viewer" id="log-viewer"><span style="color:var(--muted)">Selecione um log acima.</span></div>
+
+  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:11px;color:var(--muted)">Cores:</span>
+    <span class="badge badge-green">200 OK</span>
+    <span class="badge badge-orange">401 Não autorizado</span>
+    <span class="badge badge-red">403 Proibido</span>
+    <span class="badge" style="background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)">429 Rate limit</span>
+    <span class="badge badge-red">500 Erro</span>
+  </div>
+</div>
+
+<!-- ── RELATÓRIOS ──────────────────────────────────────────────────────────── -->
+<div class="page" id="page-reports">
+  <div class="page-title">Relatórios de Ataques</div>
+  <div class="page-sub">// Histórico de simulações salvas em JSON</div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:13px;color:var(--muted)" id="rcount">—</span>
+    <button class="btn-sm" onclick="loadReports()">↻ Atualizar</button>
+  </div>
+
+  <div id="report-list">
+    <div class="empty"><div class="empty-icon">📊</div><p>Nenhum relatório. Execute um ataque primeiro.</p></div>
+  </div>
+</div>
+
+<!-- ── TESTE MANUAL ────────────────────────────────────────────────────────── -->
+<div class="page" id="page-manual">
+  <div class="page-title">Teste Manual de Endpoints</div>
+  <div class="page-sub">// Envie requisições individuais para explorar cada API</div>
+
+  <div class="g2">
+
+    <div class="card">
+      <div class="card-title"><span class="method GET">GET</span> /health</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Verifica se a API está online e qual modo está ativo.</p>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="label">Alvo</label>
+        <select class="select" id="h-alvo"><option value="vuln">API Vulnerável</option><option value="secure">API Protegida</option></select>
+      </div>
+      <button class="btn btn-green" onclick="mReq('health','GET','h-alvo',null,'h-resp','h-st')">Enviar</button>
+      <div class="resp-status" id="h-st"></div>
+      <div class="resp-box" id="h-resp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method POST">POST</span> /login</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Autenticação com credenciais específicas.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Alvo</label>
+          <select class="select" id="l-alvo"><option value="vuln">API Vulnerável</option><option value="secure">API Protegida</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="label">Usuário</label><input class="input" type="text" id="l-user" value="admin"></div>
+        <div class="form-group"><label class="label">Senha</label><input class="input" type="text" id="l-pass" value="password123"></div>
+      </div>
+      <button class="btn btn-blue" onclick="mLogin()">Enviar Login</button>
+      <div class="resp-status" id="l-st"></div>
+      <div class="resp-box" id="l-resp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method GET">GET</span> /relatorio</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Busca todos os registros de transações. Query pesada — alvo do DoS.</p>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="label">Alvo</label>
+        <select class="select" id="r-alvo"><option value="vuln">API Vulnerável</option><option value="secure">API Protegida</option></select>
+      </div>
+      <button class="btn btn-ghost" onclick="mReq('relatorio','GET','r-alvo',null,'r-resp','r-st')">Enviar</button>
+      <div class="resp-status" id="r-st"></div>
+      <div class="resp-box" id="r-resp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method POST">POST</span> /login <span class="badge badge-orange" style="margin-left:6px">Teste de Bloqueio</span></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Envia login com senha errada múltiplas vezes. Na API Protegida, após 3 falhas o IP é bloqueado por 60s (429). Na Vulnerável, nunca bloqueia.</p>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="label">Alvo</label>
+        <select class="select" id="u-alvo"><option value="secure">API Protegida</option><option value="vuln">API Vulnerável</option></select>
+      </div>
+      <button class="btn btn-ghost" onclick="mLoginErrado()">Enviar senha errada</button>
+      <div class="resp-status" id="u-st"></div>
+      <div class="resp-box" id="u-resp"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Navegação ─────────────────────────────────────────────────────────────────
+function go(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('page-' + name).classList.add('on');
+  const labels = {overview:'visão',attacks:'ataque',logs:'logs',reports:'relat',manual:'manual'};
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(labels[name])) t.classList.add('on');
+  });
+  if (name === 'logs' && !S.logLoaded) loadLog('gateway.log');
+  if (name === 'reports') loadReports();
+  if (name === 'overview') refreshStatus();
+}
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+const S = {
+  logLoaded: false,
+  logFile: 'gateway.log',
+  logLines: [],
+  bf: null,   // attack_id
+  dos: null,
+};
+
+// ── Status ────────────────────────────────────────────────────────────────────
+async function refreshStatus() {
+  try {
+    const d = await fetch('/api/status').then(r => r.json());
+
+    ['vuln','secure'].forEach(k => {
+      const info = d[k];
+      const dot  = document.getElementById('dot-' + k);
+      const lbl  = document.getElementById('lbl-' + k);
+      const card = document.getElementById('acard-' + k);
+      const badge= document.getElementById('abadge-' + k);
+      const modoEl = document.getElementById(k === 'vuln' ? 'v-modo' : 's-modo');
+
+      dot.className  = 'dot ' + (info.online ? 'on' : 'off');
+      lbl.textContent= (k === 'vuln' ? ':8081' : ':8082') + (info.online ? ' ●' : ' ✗');
+      card.className = 'api-card ' + (info.online ? 'on' : 'off');
+      badge.textContent = info.online ? 'Online' : 'Offline';
+      badge.className   = 'badge ' + (info.online ? 'badge-green' : 'badge-red');
+      if (modoEl) modoEl.textContent = info.modo || '—';
+    });
+
+    el('st-wordlist').textContent = d.wordlist_size;
+    el('st-bf').textContent       = d.bf_count;
+    el('st-dos').textContent      = d.dos_count;
+    const online = (d.vuln.online ? 1 : 0) + (d.secure.online ? 1 : 0);
+    el('st-gw').textContent       = `${online}/2`;
+    el('st-gw').style.color       = online === 2 ? 'var(--green)' : online === 1 ? 'var(--orange)' : 'var(--red)';
+
+    renderArch(d.vuln.online, d.secure.online);
+  } catch(e) { console.error(e); }
+}
+
+function renderArch(vulnOn, secOn) {
+  const node = (label, sub, on) =>
+    `<div class="arch-node ${on?'on':'off'}">
+      <div class="arch-dot">${on?'🟢':'🔴'}</div>
+      <div class="arch-name">${label}</div>
+      <div class="arch-sub">${sub}</div>
+    </div>`;
+  const arr = `<div class="arch-arr">→</div>`;
+  el('arch').innerHTML =
+    node('Atacante','atacar.py', true) + arr +
+    node('Dashboard',':5050', true) + arr +
+    node('API Vulnerável',':8081', vulnOn) + arr +
+    node('PostgreSQL',':5432', vulnOn || secOn) +
+    '<div class="arch-arr" style="opacity:0">→</div>' +
+    node('API Protegida',':8082', secOn);
+}
+
+// ── Ataques ───────────────────────────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function ts() { return new Date().toLocaleTimeString('pt-BR'); }
+
+function log(cid, type, msg) {
+  const c = el(cid);
+  const ln = document.createElement('div');
+  ln.className = 'cl fi';
+
+  let m = msg
+    .replace(/→ 200/g,'→ <span class="hl-g">200</span>')
+    .replace(/→ 401/g,'→ <span class="hl-o">401</span>')
+    .replace(/→ 403/g,'→ <span class="hl-r">403</span>')
+    .replace(/→ 429/g,'→ <span class="hl-p">429</span>')
+    .replace(/→ 500/g,'→ <span class="hl-r">500</span>');
+
+  ln.innerHTML = `<span class="cl-ts">[${ts()}]</span><span class="cl-tag ${type}">${type.toUpperCase()}</span><span class="cl-msg">${m}</span>`;
+  c.appendChild(ln);
+  c.scrollTop = c.scrollHeight;
+}
+
+function clrConsole(id) {
+  el(id).innerHTML = '<div class="cl"><span class="cl-tag info">INFO</span><span class="cl-msg">Console limpo.</span></div>';
+}
+
+async function startAtk(tipo) {
+  const isBF = tipo === 'bruteforce';
+  const alvo = el(isBF ? 'bf-alvo' : 'dos-alvo').value;
+  const logId= isBF ? 'bf-log' : 'dos-log';
+  const btnId= isBF ? 'btn-bf' : 'btn-dos';
+  const btn  = el(btnId);
+
+  pauseRefresh();
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Executando...';
+  if (isBF) { el('bf-prog').style.display='block'; el('bf-result').innerHTML=''; }
+  else       { el('dos-prog').style.display='block'; el('dos-result').innerHTML=''; }
+
+  clrConsole(logId);
+
+  const body = { tipo, alvo };
+  if (isBF) body.max_tentativas = parseInt(el('bf-max').value);
+  else      { body.workers = parseInt(el('dos-workers').value); body.duracao = parseInt(el('dos-dur').value); }
+
+  try {
+    const { attack_id } = await fetch('/api/attack/start',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    }).then(r => r.json());
+
+    if (isBF) S.bf = attack_id; else S.dos = attack_id;
+
+    const poll = setInterval(async () => {
+      const { events, status } = await fetch(`/api/attack/poll/${attack_id}`).then(r => r.json());
+      events.forEach(ev => handleEv(ev, tipo, logId));
+      if (status === 'done' || status === 'error') {
+        clearInterval(poll);
+        finish(tipo, attack_id, btn, isBF ? 'btn-red' : 'btn-orange', isBF ? '🚀 Iniciar Brute Force' : '💣 Iniciar DoS');
+      }
+    }, 600);
+  } catch(e) {
+    log(logId, 'error', 'Falha ao iniciar: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = isBF ? '🚀 Iniciar Brute Force' : '💣 Iniciar DoS';
+  }
+}
+
+function handleEv(ev, tipo, logId) {
+  const isBF = tipo === 'bruteforce';
+  switch(ev.type) {
+    case 'info':
+      log(logId, 'info', ev.msg); break;
+    case 'attempt':
+      log(logId, ev.color || 'fail', `[${ev.numero}/${ev.total}] "${ev.senha}" → ${ev.code} (${ev.tempo}s)`);
+      if (isBF) {
+        const p = Math.round(ev.numero / ev.total * 100);
+        el('bf-prog-fill').style.width = p + '%';
+        el('bf-prog-lbl').textContent  = `${ev.numero} / ${ev.total}`;
+        el('bf-prog-pct').textContent  = p + '%';
+      }
+      break;
+    case 'found':
+      log(logId, 'success', '🔑 ' + ev.msg); break;
+    case 'blocked':
+      log(logId, 'blocked', '🛡️ ' + ev.msg); break;
+    case 'dos_progress': {
+      const p = Math.round(ev.elapsed / ev.duracao * 100);
+      log(logId, 'dos', `[${ev.elapsed}s/${ev.duracao}s] ${ev.total} reqs — codes: ${JSON.stringify(ev.codigos)}`);
+      el('dos-prog-fill').style.width = p + '%';
+      el('dos-prog-lbl').textContent  = `${ev.elapsed}s / ${ev.duracao}s`;
+      el('dos-reqs').textContent      = `${ev.total} reqs`;
+      break;
+    }
+    case 'error':
+      log(logId, 'error', ev.msg); break;
+    case 'done':
+      log(logId, 'success', `✅ Concluído — ${ev.filename}`);
+      renderResult(tipo, ev.result);
+      refreshStatus();
+      break;
+  }
+}
+
+async function finish(tipo, attack_id, btn, btnClass, label) {
+  btn.disabled = false;
+  btn.className = `btn btn-${btnClass === 'btn-red' ? 'red' : 'orange'}`;
+  btn.innerHTML = label;
+  resumeRefresh();
+  refreshStatus();
+}
+
+function renderResult(tipo, r) {
+  const isBF   = tipo === 'bruteforce';
+  const stats  = r.estatisticas || {};
+  const codigos= stats.codigos_http || {};
+  const total  = Object.values(codigos).reduce((a,b) => a+b, 0) || 1;
+  const colors = {200:'var(--green)',401:'var(--orange)',403:'var(--red)',429:'var(--purple)',0:'var(--muted)'};
+
+  const bars = Object.entries(codigos).map(([c,n]) => {
+    const pct = Math.round(n/total*100);
+    const col = colors[+c] || 'var(--accent)';
+    return `<div class="cbar-row">
+      <span class="cbar-lbl" style="color:${col}">${c}</span>
+      <div class="cbar-track"><div class="cbar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="cbar-n">${n}×</span>
+    </div>`;
+  }).join('');
+
+  let cls, title;
+  if (isBF) {
+    if (r.senha_encontrada)            { cls='bad';  title=`🔓 Senha encontrada: <strong>${r.senha_encontrada}</strong> (tentativa #${r.total_tentativas})`; }
+    else if (codigos[429]||codigos['429']) { cls='warn'; title=`🛡️ IP bloqueado após ${r.total_tentativas} tentativa(s) — rate limiting funcionou`; }
+    else                               { cls='ok';   title=`❌ Senha não encontrada em ${r.total_tentativas} tentativa(s)`; }
+  } else {
+    const bloq = codigos[429]||codigos['429']||0;
+    const req  = stats.total_requisicoes||0;
+    const refused = stats.erros_recusados || 0;
+    const ok200   = codigos[200]||codigos['200']||0;
+    const aviso    = stats.aviso || null;
+    const timeouts = stats.erros_timeouts || 0;
+    cls = bloq > req*0.3 ? 'warn' : (aviso ? 'warn' : 'bad');
+    if (aviso) {
+      title = `⚠️ API indisponível no início — aguarde recuperar e tente novamente`;
+    } else if (bloq > req*0.3) {
+      title = `🛡️ Rate limiting bloqueou ${bloq} de ${req} requisições — API protegida`;
+    } else if (refused > req*0.5) {
+      title = `💥 API derrubada — ${refused} conexões recusadas (sem recursos)`;
+    } else if (timeouts > req*0.5) {
+      title = `💣 API sobrecarregada — ${timeouts} de ${req} requisições sem resposta em tempo (DoS efetivo)`;
+    } else if (req === 0) {
+      title = `⚠️ Nenhuma requisição completada — verifique se a API está online`;
+    } else {
+      title = `💣 ${req} requisições enviadas — tempo médio ${stats.tempo_resposta_medio}s`;
+    }
+  }
+
+  const recusados = stats.erros_recusados || 0;
+  const timeoutsN = stats.erros_timeouts  || 0;
+  const metricsHtml = isBF ? `
+    <div class="rm"><div class="rm-val">${r.total_tentativas||0}</div><div class="rm-lbl">Tentativas</div></div>
+    <div class="rm"><div class="rm-val">${stats.tempo_total||'—'}s</div><div class="rm-lbl">Tempo total</div></div>
+  ` : `
+    <div class="rm"><div class="rm-val">${stats.total_requisicoes||'—'}</div><div class="rm-lbl">Requisições</div></div>
+    <div class="rm"><div class="rm-val">${stats.tempo_resposta_medio||'—'}s</div><div class="rm-lbl">Tempo médio</div></div>
+    <div class="rm" title="Conexões recusadas — API sobrecarregada"><div class="rm-val" style="color:${recusados>0?'var(--red)':'inherit'}">${recusados}</div><div class="rm-lbl">Recusadas</div></div>
+    <div class="rm"><div class="rm-val">${timeoutsN}</div><div class="rm-lbl">Timeouts</div></div>
+  `;
+
+  el(isBF ? 'bf-result' : 'dos-result').innerHTML = `
+    <div class="result ${cls}">
+      <div class="result-title">${title}</div>
+      <div class="rmetrics">${metricsHtml}</div>
+      <div class="cbars">${bars}</div>
+    </div>`;
+}
+
+function quickAtk(tipo, alvo) {
+  go('attacks');
+  if (tipo === 'bruteforce') el('bf-alvo').value = alvo;
+  else el('dos-alvo').value = alvo;
+  setTimeout(() => startAtk(tipo), 150);
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+async function loadLog(file, tabEl) {
+  S.logFile   = file;
+  S.logLoaded = true;
+  document.querySelectorAll('.ltab').forEach(t => t.classList.remove('on'));
+  if (tabEl) tabEl.classList.add('on');
+
+  el('log-viewer').innerHTML = '<span style="color:var(--muted)">Carregando...</span>';
+
+  try {
+    const { lines } = await fetch('/api/logs/' + file).then(r => r.json());
+    S.logLines = lines || [];
+    renderLog(S.logLines);
+    el('log-info').textContent = `${file} — ${S.logLines.length} linhas`;
+  } catch(e) {
+    el('log-viewer').innerHTML = `<span style="color:var(--red)">Erro: ${e.message}</span>`;
+  }
+}
+
+function renderLog(lines) {
+  if (!lines.length) {
+    el('log-viewer').innerHTML = '<span style="color:var(--muted)">Nenhuma linha.</span>';
+    return;
+  }
+  el('log-viewer').innerHTML = lines.map(l => {
+    let cls = '';
+    if      (l.includes(' 200')) cls = 'lv-200';
+    else if (l.includes(' 401')) cls = 'lv-401';
+    else if (l.includes(' 403')) cls = 'lv-403';
+    else if (l.includes(' 429')) cls = 'lv-429';
+    else if (l.includes(' 500')) cls = 'lv-500';
+    return `<span class="lv-line ${cls}">${l.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+  }).join('\n');
+}
+
+function filterLog() {
+  const q = el('log-filter').value.toLowerCase();
+  renderLog(q ? S.logLines.filter(l => l.toLowerCase().includes(q)) : S.logLines);
+}
+
+function refreshLog()   { loadLog(S.logFile); }
+function scrollBottom() { const v = el('log-viewer'); v.scrollTop = v.scrollHeight; }
+
+// ── Relatórios ────────────────────────────────────────────────────────────────
+async function loadReports() {
+  const reports = await fetch('/api/reports').then(r => r.json()).catch(() => []);
+  el('rcount').textContent = `${reports.length} relatório(s)`;
+
+  if (!reports.length) {
+    el('report-list').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><p>Nenhum relatório. Execute um ataque primeiro.</p></div>';
+    return;
+  }
+
+  const colors = {200:'var(--green)',401:'var(--orange)',403:'var(--red)',429:'var(--purple)',0:'var(--muted)'};
+
+  el('report-list').innerHTML = '<div class="report-list">' + reports.map((rep, idx) => {
+    const isBF  = rep.tipo_ataque === 'bruteforce';
+    const stats = rep.estatisticas || {};
+    const fname = rep._filename || '';
+    // Extract clean date from filename e.g. ataque_dos_vuln_20260322_012010
+    const m = fname.match(/(\d{8})_(\d{6})/);
+    const dateStr = m ? `${m[1].slice(6)}/${m[1].slice(4,6)}/${m[1].slice(0,4)} ${m[2].slice(0,2)}:${m[2].slice(2,4)}` : '—';
+
+    const bfStatus = rep.senha_encontrada ? '🔓' : (rep.total_tentativas > 0 ? '🛡️' : '⚠️');
+    const bfLabel  = rep.senha_encontrada ? 'Comprometida' : (rep.total_tentativas > 0 ? 'Segura' : 'Sem conexão');
+    const stats2 = isBF
+      ? `<div class="rst"><div class="rst-val">${rep.total_tentativas||0}</div><div class="rst-lbl">Tentativas</div></div>
+         <div class="rst"><div class="rst-val" style="color:${rep.senha_encontrada?'var(--red)':'var(--green)'}">${bfStatus}</div><div class="rst-lbl">${bfLabel}</div></div>`
+      : `<div class="rst"><div class="rst-val">${stats.total_requisicoes !== undefined ? stats.total_requisicoes : '?'}</div><div class="rst-lbl">Requisições</div></div>
+         <div class="rst"><div class="rst-val">${stats.aviso ? '⚠️' : (stats.tempo_resposta_medio ? stats.tempo_resposta_medio+'s' : '—')}</div><div class="rst-lbl">${stats.aviso ? 'Indisp.' : 'Avg Resp'}</div></div>`;
+
+    return `<div>
+      <div class="report-item" onclick="toggleDetail(${idx})">
+        <div class="report-icon ${isBF?'bf':'dos'}">${isBF?'🔓':'💣'}</div>
+        <div class="report-info">
+          <div class="report-title">${isBF?'Brute Force':'DoS'} — ${rep.alvo||rep.alvo_key||'—'}</div>
+          <div class="report-meta">${dateStr}</div>
+        </div>
+        <div class="report-stats">${stats2}</div>
+        <span style="color:var(--muted);font-size:16px" id="arr-${idx}">›</span>
+      </div>
+      <div class="report-detail" id="detail-${idx}" style="display:none">
+        ${buildDetail(rep)}
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function toggleDetail(idx) {
+  const d = el(`detail-${idx}`);
+  const a = el(`arr-${idx}`);
+  const open = d.style.display !== 'none' && d.style.display !== '';
+  d.style.display = open ? 'none' : 'block';
+  a.textContent   = open ? '›' : '⌄';
+}
+
+function buildDetail(rep) {
+  const isBF   = rep.tipo_ataque === 'bruteforce';
+  const stats  = rep.estatisticas || {};
+  const codigos= stats.codigos_http || {};
+  const total  = Object.values(codigos).reduce((a,b)=>a+b,0) || 1;
+  const colors = {200:'var(--green)',401:'var(--orange)',403:'var(--red)',429:'var(--purple)',0:'var(--muted)'};
+
+  const bars = Object.entries(codigos).map(([c,n]) => {
+    const pct = Math.round(n/total*100);
+    const col = colors[+c]||'var(--accent)';
+    return `<div class="cbar-row">
+      <span class="cbar-lbl" style="color:${col}">${c}</span>
+      <div class="cbar-track"><div class="cbar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="cbar-n">${n}×</span>
+    </div>`;
+  }).join('');
+
+  const metrics = isBF ? `
+    <div class="rm"><div class="rm-val">${rep.total_tentativas||'—'}</div><div class="rm-lbl">Tentativas</div></div>
+    <div class="rm"><div class="rm-val" style="color:${rep.senha_encontrada?'var(--red)':'var(--green)'}">${rep.senha_encontrada||'Não achada'}</div><div class="rm-lbl">Senha</div></div>
+    <div class="rm"><div class="rm-val">${stats.tempo_total||'—'}s</div><div class="rm-lbl">Tempo total</div></div>
+  ` : `
+    <div class="rm"><div class="rm-val">${stats.total_requisicoes||'—'}</div><div class="rm-lbl">Requisições</div></div>
+    <div class="rm"><div class="rm-val">${stats.tempo_resposta_medio||'—'}s</div><div class="rm-lbl">Tempo médio</div></div>
+    <div class="rm"><div class="rm-val">${stats.tempo_resposta_p95||'—'}s</div><div class="rm-lbl">P95</div></div>
+    <div class="rm" title="Conexões recusadas — API sobrecarregada"><div class="rm-val">${(stats.erros_recusados||0)+(stats.outros_erros||0)}</div><div class="rm-lbl">Recusadas</div></div>
+    <div class="rm"><div class="rm-val">${stats.erros_timeouts||0}</div><div class="rm-lbl">Timeouts</div></div>
+  `;
+
+  return `<div class="rmetrics" style="margin-bottom:10px">${metrics}</div><div class="cbars">${bars}</div>`;
+}
+
+// ── Teste Manual ──────────────────────────────────────────────────────────────
+async function mReq(endpoint, method, alvoId, body, respId, stId) {
+  const alvo = el(alvoId).value;
+  el(stId).innerHTML  = '<span class="spin"></span>';
+  el(respId).style.display = 'none';
+  try {
+    const d = await fetch(`/api/direct/${alvo}/${endpoint}`, {
+      method, headers:{'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined
+    }).then(r => r.json());
+    const code = d.status_code;
+    const col  = code===200?'var(--green)':code>=400?'var(--red)':'var(--muted)';
+    el(stId).innerHTML  = `<span style="color:${col};font-weight:700">HTTP ${code}</span> <span style="color:var(--muted)">${alvo==='vuln'?'Vulnerável':'Protegida'}</span>`;
+    el(respId).style.display = 'block';
+    el(respId).textContent   = JSON.stringify(d.body, null, 2);
+  } catch(e) {
+    el(stId).innerHTML  = `<span style="color:var(--red)">${e.message}</span>`;
+    el(respId).style.display = 'block';
+    el(respId).textContent   = e.message;
+  }
+}
+
+function mLoginErrado() {
+  mReq('login','POST','u-alvo',{username:'admin',password:'senha_errada_' + Date.now()},'u-resp','u-st');
+}
+
+function mLogin() {
+  mReq('login','POST','l-alvo',{username:el('l-user').value,password:el('l-pass').value},'l-resp','l-st');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+refreshStatus();
+// Auto-refresh pausado durante ataques para evitar oscilação nos indicadores
+let _autoRefresh = setInterval(refreshStatus, 30000);
+function pauseRefresh() { clearInterval(_autoRefresh); }
+function resumeRefresh() { clearInterval(_autoRefresh); _autoRefresh = setInterval(refreshStatus, 30000); }
+</script>
+</body>
+</html>

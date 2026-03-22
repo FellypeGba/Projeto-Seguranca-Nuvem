@@ -8,6 +8,8 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    networks:
+      - seccloud
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
       interval: 10s
@@ -23,6 +25,8 @@ services:
       - DATABASE_URL=postgresql://user:password@database:5432/mydb
     volumes:
       - ./logs:/logs
+    networks:
+      - seccloud
     depends_on:
       database:
         condition: service_healthy
@@ -36,6 +40,8 @@ services:
       - DATABASE_URL=postgresql://user:password@database:5432/mydb
     volumes:
       - ./logs:/logs
+    networks:
+      - seccloud
     depends_on:
       database:
         condition: service_healthy
@@ -43,3 +49,26 @@ services:
       resources:
         limits:
           cpus: '0.5'
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "5050:5050"
+    environment:
+      # Usa os nomes de serviço do Docker como hostname (resolução interna)
+      - VULN_URL=http://api-vulneravel:5000
+      - SECURE_URL=http://api-protegida:5000
+      - WORDLIST_PATH=/wordlist.txt
+      - LOG_DIR=/logs
+    volumes:
+      - ./logs:/logs
+      - ./atacante/wordlist.txt:/wordlist.txt:ro
+    networks:
+      - seccloud
+    depends_on:
+      - api-vulneravel
+      - api-protegida
+
+networks:
+  seccloud:
+    driver: bridge
